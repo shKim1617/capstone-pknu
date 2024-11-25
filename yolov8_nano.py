@@ -92,6 +92,7 @@ with dai.Device(pipeline) as device:
     qRgb = device.getOutputQueue(name="rgb", maxSize=4, blocking=False)
     qDet = device.getOutputQueue(name="nn", maxSize=4, blocking=False)
 
+    # 아래의 두 함수와 와일에서 사용하는 변수
     frame = None
     detections = []
     startTime = time.monotonic()
