@@ -60,12 +60,36 @@ def calculate_points(fit, y_values):
             return abs(fit[0] * y_values**2 + fit[1] * y_values + fit[2])
     return None
 
+# 정지선 detect
+# 주황색 정지선 인식
+def detect_stop_line(frame, lower_orange, upper_orange):
+    # 프레임을 HSV 색 공간으로 변환
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    # 주황색 범위 마스크 생성
+    mask = cv2.inRange(hsv, lower_orange, upper_orange)
+    
+    # 마스크에서 윤곽선 찾기
+    contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    
+    for contour in contours:
+        if cv2.contourArea(contour) > 500:  # 너무 작은 윤곽선은 무시
+            # 윤곽선 근처에 사각형을 그리기
+            x, y, w, h = cv2.boundingRect(contour)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)  # 빨간색 사각형
+            
+            # 정지선 감지됨
+            return True
+    return False
 
 # 동영상 파일 경로
 video_path = 'images/drive1.mp4'
 
 # VideoCapture 객체 생성
 cap = cv2.VideoCapture(video_path)
+
+# 주황색 범위 (HSV)
+lower_orange = np.array([5, 150, 150])  # 주황색 하한값
+upper_orange = np.array([15, 255, 255])  # 주황색 상한값
 
 # 동영상이 열렸는지 확인
 if not cap.isOpened():
@@ -105,6 +129,10 @@ else:
 
         # 차선 검출을 할건데..
         lines = cv2.HoughLinesP(mask_eroded, 1, np.pi / 180, 100, np.array([]), minLineLength=40, maxLineGap=25)
+
+         # 주황색 정지선 감지
+        if detect_stop_line(frame, lower_orange, upper_orange):
+            print("주황색 정지선 감지")
         
         # 차선 분류 및 피팅
         left_x, left_y, right_x, right_y = [], [], [], []
@@ -199,6 +227,8 @@ else:
         else:
             center_x_values = None
 
+
+        '''
         # 오른쪽 차선의 기울기 출력
         if right_fit is not None:  # 오른쪽 차선이 검출된 경우
             slope_right = right_fit[0]  # fit_line 결과에서 slope (기울기)
@@ -220,7 +250,7 @@ else:
             print(f"오른쪽 차선의 하단 x 좌표: {x_right_bottom:.2f}")
             print(f"중앙점 (640, 360)과 오른쪽 차선 하단의 x 거리 차: {distance:.2f}")
         else:
-            print("오른쪽 차선이 검출되지 않았습니다.")
+            print("오른쪽 차선이 검출되지 않았습니다.")'''
 
 
 
