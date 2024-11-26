@@ -5,8 +5,7 @@ import depthai as dai
 import numpy as np
 import time
 
-# with로 카메라 장치 확인해서 
-# 영상 뽑기 전 세팅까지 되어 있음
+# 원본 영상과 욜로 영상 추출
 class Yolo_camera:
     def __init__(self, pipeline):
         self.nnPath = str((Path(__file__).parent / Path('../models/yolov8n_coco_640x352.blob')).resolve().absolute())
@@ -31,9 +30,6 @@ class Yolo_camera:
         self.xoutRgb = pipeline.create(dai.node.XLinkOut)
         self.nnOut = pipeline.create(dai.node.XLinkOut)  
         
-        # self.xoutRgb.setStreamName("rgb")
-        # self.nnOut.setStreamName("nn")
-        
         # 나중에 추가 세팅 필수
         self.qRgb = None
         self.qDet = None
@@ -47,8 +43,6 @@ class Yolo_camera:
     def set_camera(self):
         self.xoutRgb.setStreamName("rgb")
         self.nnOut.setStreamName("nn")
-        # print(self.xoutRgb)
-        # print(self.nnOut)
 
         # Properties
         # 카메라 설정
@@ -72,32 +66,19 @@ class Yolo_camera:
         self.detectionNetwork.setNumInferenceThreads(2)
         self.detectionNetwork.input.setBlocking(False)
         
-        # print("pipeline nodes:", pipeline.getAllNodes())
-        # print("pipeline connections:", pipeline.getConnections())
-        
         # Linking
         # 노드 연결
         self.camRgb.preview.link(self.detectionNetwork.input)
-        # print("pipeline connections:", pipeline.getConnections())
         if self.syncNN:
             self.detectionNetwork.passthrough.link(self.xoutRgb.input)
-            # print("if link complete")
         else:
             self.camRgb.preview.link(self.xoutRgb.input)
-            # print("else link complete")
 
         self.detectionNetwork.out.link(self.nnOut.input)
-        # print("pipeline connections:", pipeline.getConnections())
-        
-        
-        # print("Stream name for xoutRgb:", self.xoutRgb.getStreamName())
-        # print("Stream name for nnOut:", self.nnOut.getStreamName())
-
         
     def set2_camera(self, device):
         # 추가 세팅
         # Output queues will be used to get the rgb frames and nn data from the outputs defined above
-        # print("Available output streams:", device.getOutputQueueNames())  # 디버깅용
         self.qRgb = device.getOutputQueue(name="rgb", maxSize=4, blocking=False)
         self.qDet = device.getOutputQueue(name="nn", maxSize=4, blocking=False)
         
@@ -125,8 +106,6 @@ class Yolo_camera:
             cv2.rectangle(frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
             
         return frame
-        # Show the frame
-        # cv2.imshow(name, frame) 
         
     def return_img(self):
         try:
