@@ -101,8 +101,8 @@ def detect_green_light(img):
     hsv_image = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     # 초록색 HSV 범위 정의
-    lower_green = np.array([35, 100, 100])  # 초록색 범위의 하한값
-    upper_green = np.array([85, 255, 255])  # 초록색 범위의 상한값
+    lower_green = np.array([40, 100, 150])  # 초록색 범위의 하한값
+    upper_green = np.array([75, 255, 255])  # 초록색 범위의 상한값
 
     # 초록색 마스크 생성
     green_mask = cv2.inRange(hsv_image, lower_green, upper_green)
@@ -116,48 +116,48 @@ def detect_green_light(img):
 
     return green_percentage
 
-pipeline = dai.Pipeline()
+# pipeline = dai.Pipeline()
 
-yolo_camera = Yolo_camera(pipeline=pipeline)
-depth_camera = Depth_camera(pipeline=pipeline)
+# yolo_camera = Yolo_camera(pipeline=pipeline)
+# depth_camera = Depth_camera(pipeline=pipeline)
 
-yolo_camera.set_camera()
-depth_camera.set_camera()
+# yolo_camera.set_camera()
+# depth_camera.set_camera()
 
-device = dai.Device(pipeline)
+# device = dai.Device(pipeline)
 
-yolo_camera.set2_camera(device)
-depth_camera.set2_camera(device)
+# yolo_camera.set2_camera(device)
+# depth_camera.set2_camera(device)
 
-check_color = 0
-count = 0
+# check_color = 0
+# count = 0
 
-while check_device(device):
-    yolo_img, line_img, detections = yolo_camera.return_img()
-    # depth_img, depth_color_img = depth_camera.return_img()
+# while check_device(device):
+#     yolo_img, line_img, detections = yolo_camera.return_img()
+#     # depth_img, depth_color_img = depth_camera.return_img()
     
-    ## detections에서 신호등 부분만 추출
-    detect_traffic_img, traffic_img = displayFrame_traffic_light(line_img, detections)
-    green = green_detection(detect_traffic_img)
-    if traffic_img is not None:
-        cv2.imshow("traffic", traffic_img)
-        green_percentage = detect_green_light(traffic_img)
-        print(green_percentage)
-    # orange = orange_detection(detect_traffic_img)
-    # red = red_detection(detect_traffic_img)
+#     ## detections에서 신호등 부분만 추출
+#     detect_traffic_img, traffic_img = displayFrame_traffic_light(line_img, detections)
+#     green = green_detection(detect_traffic_img)
+#     if traffic_img is not None:
+#         cv2.imshow("traffic", traffic_img)
+#         green_percentage = detect_green_light(traffic_img)
+#         print(green_percentage)
+#     orange = orange_detection(detect_traffic_img)
+#     red = red_detection(detect_traffic_img)
         
         
-    if yolo_img is None:
-        print("no img")
-    else:
-        cv2.imshow("1", detect_traffic_img)
-        cv2.imshow("green detect", green)
+#     if yolo_img is None:
+#         print("no img")
+#     else:
+#         cv2.imshow("1", detect_traffic_img)
+#         cv2.imshow("green detect", green)
         
-        # cv2.imshow("orange detect", orange)
-        # cv2.imshow("red detect", red)
+#         cv2.imshow("orange detect", orange)
+#         cv2.imshow("red detect", red)
 
         
-    if cv2.waitKey(1) == ord('q'):
-        break
+#     if cv2.waitKey(1) == ord('q'):
+#         break
 
-device.close()
+# device.close()

@@ -10,6 +10,7 @@ def capture_from_camera(camera_index=0, save_image=False):
         return
 
     print("카메라가 활성화되었습니다. ESC 키를 눌러 종료하세요.")
+    prev_lane_gap = None
 
     while True:
         ret, frame = cap.read()
@@ -28,7 +29,7 @@ def capture_from_camera(camera_index=0, save_image=False):
             cv2.imwrite("captured_image.jpg", frame)
             print("이미지가 저장되었습니다: captured_image.jpg")
         
-        img, slope = detect_road(frame)
+        img, slope, prev_lane_gap = detect_road(frame, prev_lane_gap)
         if slope is not None:
             print(slope)
         cv2.imshow("result", img)

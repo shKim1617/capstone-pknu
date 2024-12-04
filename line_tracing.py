@@ -47,8 +47,9 @@ def detect_stop_line(frame, lower_orange, upper_orange):
         if cv2.contourArea(contour) > 500:  # 작은 영역 무시
             x, y, w, h = cv2.boundingRect(contour)
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
-            return True  # 정지선 감지됨
-    return False
+            stop_size = [x, y, w, h]
+            return stop_size  # 정지선 감지됨
+    return None
 
 # 세팅
 lower_orange = np.array([5, 150, 150])
@@ -58,7 +59,7 @@ upper_white = np.array([255, 50, 255])
 
 
 # 차선 검출
-def detect_road(frame):
+def detect_road(frame, prev_lane_gap):
     height, width, _ = frame.shape
     cropped_image = frame[height // 2 :, :]  # 하단 영역 자르기
     blurred = cv2.GaussianBlur(cropped_image, (5, 5), 0)
@@ -73,8 +74,10 @@ def detect_road(frame):
     lines = cv2.HoughLinesP(mask_eroded, 1, np.pi / 180, 100, minLineLength=40, maxLineGap=25)
 
     # 정지선 감지
-    if detect_stop_line(frame, lower_orange, upper_orange):
-        print("주황색 정지선 감지")
+    stop_line = None
+    stop_line = detect_stop_line(frame, lower_orange, upper_orange) 
+        
+         
 
     # 차선 분류 및 좌표 수집
     left_x, left_y, right_x, right_y = [], [], [], []
@@ -114,26 +117,69 @@ def detect_road(frame):
         lane_gap = np.mean(right_x_values - left_x_values)
         center_x_values = (left_x_values + right_x_values) / 2
         prev_lane_gap = lane_gap  # 평균 차선을 저장
-    elif left_x_values is None and right_x_values is not None:
-        # 왼쪽 차선이 없는 경우, 이전 프레임의 간격을 기준으로 추정
+    # elif left_x_values is None and right_x_values is not None:
+    #     # 왼쪽 차선이 없는 경우, 이전 프레임의 간격을 기준으로 추정
+    #     if prev_lane_gap is not None:
+    #         left_x_values = right_x_values - prev_lane_gap
+    #         center_x_values = (left_x_values + right_x_values) / 2
+    # elif left_x_values is not None and right_x_values is None:
+    #     # 오른쪽 차선이 없는 경우, 이전 프레임의 간격을 기준으로 추정
+    #     if prev_lane_gap is not None:
+    #         right_x_values = left_x_values + prev_lane_gap
+    #         center_x_values = (left_x_values + right_x_values) / 2
+    else:
         if prev_lane_gap is not None:
             left_x_values = right_x_values - prev_lane_gap
-            center_x_values = (left_x_values + right_x_values) / 2
-    elif left_x_values is not None and right_x_values is None:
-        # 오른쪽 차선이 없는 경우, 이전 프레임의 간격을 기준으로 추정
-        if prev_lane_gap is not None:
-            right_x_values = left_x_values + prev_lane_gap
             center_x_values = (left_x_values + right_x_values) / 2
     
     result = cv2.bitwise_and(cropped_image, cropped_image, mask=mask_eroded)
     # Center Line 기울기 계산
+    center_slope = None
     if center_x_values is not None:
         # np.polyfit으로 기울기 계산
         fit_center = np.polyfit(y_values, center_x_values, 1)  # 1차 직선 피팅
         center_slope = fit_center[0]  # 기울기
         # print(f"Center Line 기울기: {center_slope}")
-        return result, center_slope
+        
+        
         
     
     
-    return result, None
+    return result, center_slope, prev_lane_gap, stop_line
+
+# 동영상 넣어서 확인
+# 동영상 파일 경로
+video_path = "images/line.mp4"
+
+# 동영상 열기
+cap = cv2.VideoCapture(video_path)
+
+if not cap.isOpened():
+    print("동영상을 열 수 없습니다.")
+    exit()
+
+print("동영상을 재생합니다. 'q'를 눌러 종료하세요.")
+
+prev_lane_gap = None
+
+while True:
+    # 한 프레임 읽기
+    ret, frame = cap.read()
+    
+    if not ret:  # 더 이상 읽을 프레임이 없으면 종료
+        print("동영상 재생이 끝났습니다.")
+        break
+    
+    # 프레임 표시
+    cv2.imshow("Frame", frame)
+    img, slope, prev_lane_gap = detect_road(frame, prev_lane_gap)
+    cv2.imshow("img", img)
+    
+    
+    # 'q'를 누르면 종료
+    if cv2.waitKey(30) & 0xFF == ord('q'):  # 30ms 딜레이 (FPS 조절 가능)
+        break
+
+# 리소스 해제
+cap.release()
+cv2.destroyAllWindows()
