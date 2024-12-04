@@ -233,6 +233,9 @@ def cv2_waitkey():
         return True
 
 
+
+## test code
+
 # pipeline = dai.Pipeline()
 
 # yolo_camera = Yolo_camera(pipeline=pipeline)
