@@ -1,6 +1,17 @@
 Depth 카메라 기반 자율주행 자동차
 ==================================
 
+환경
+---------
+1. 젯슨 나노 os   
+   ubuntu 20.04
+2. 파이썬 3.10
+3. depthai module + python exam code
+4. yolo v8 nano   
+5. 나머지는 적당히
+
+---------------------------------------
+
 serial_arduino.py
 -----------------
 젯슨 나노가 아두이노랑 통신하기 위한 코드.
@@ -11,7 +22,7 @@ drive.py
 
 camera_class.py
 ---------------
-depthai modual을 이용하여 oak-d pro 카메라에서 원하는 이미지와 정보를 가져오는 코드.
+depthai module 이용하여 oak-d pro 카메라에서 원하는 이미지와 정보를 가져오는 코드.
 
 line_tracing.py
 ----------------
